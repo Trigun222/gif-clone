@@ -1,6 +1,19 @@
 <template>
-  <v-container class="main-container" fluid>
-    <v-row class="align-center ma-0 pa-0" style="min-height: 80px; max-height: 100px;">
+  <!-- Оверлей-лоадер поверх всего экрана -->
+  <v-overlay absolute :value="!isPageLoaded" z-index="9999">
+    <v-progress-circular indeterminate size="64" width="6" />
+  </v-overlay>
+
+  <!-- Основной контейнер показываем только после полного load -->
+  <v-container
+    v-show="isPageLoaded"
+    class="main-container"
+    fluid
+  >
+    <v-row
+      class="align-center ma-0 pa-0"
+      style="min-height: 80px; max-height: 100px;"
+    >
       <v-col cols="auto">
         <router-link to="/" class="gradient-title">
           <h2>Gif</h2>
@@ -57,10 +70,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, computed } from 'vue'
+import { ref, watch, onMounted, onUnmounted, computed } from 'vue'
 import { getTrendingGifs, searchGifs } from '@/api/gif.ts'
 import { debounce } from '@/utils/debounce.ts'
 import GifCard from '@/components/GifCard.vue'
+
+// ————— Лоадер до полной загрузки страницы —————
+const isPageLoaded = ref(false)
+function markAsLoaded() {
+  isPageLoaded.value = true
+}
+onMounted(() => {
+  if (document.readyState === 'complete') {
+    markAsLoaded()
+  } else {
+    window.addEventListener('load', markAsLoaded)
+  }
+})
+onUnmounted(() => {
+  window.removeEventListener('load', markAsLoaded)
+})
+// ——————————————————————————————
 
 const search = ref('')
 const gifs = ref<any[]>([])

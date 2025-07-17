@@ -1,54 +1,3 @@
-<script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { getGifById, searchGifs } from '@/api/gif'
-import ShareButton from '@/components/ShareButton.vue'
-
-interface Gif {
-  id: string
-  title: string
-  images: {
-    fixed_width: { url: string }
-    original: { url: string }
-  }
-  user?: {
-    username: string
-    display_name?: string
-    avatar_url?: string
-    profile_url?: string
-  }
-}
-
-const route = useRoute()
-const router = useRouter()
-const gif = ref<Gif | null>(null)
-const randomGifs = ref<Gif[]>([])
-
-const fetchGif = async () => {
-  const id = (route.params as any).id as string
-  gif.value = await getGifById(id)
-}
-
-const handleAuthorClick = () => {
-  if (gif.value?.id) {
-    localStorage.setItem('lastGifId', gif.value.id)
-  }
-}
-
-const fetchRandomGifs = async () => {
-  randomGifs.value = await searchGifs('fun', 20, Math.floor(Math.random() * 10) + 1)
-}
-
-const goToGif = (id: string) => {
-  router.push(`/gif/${id}`)
-}
-
-onMounted(async () => {
-  await fetchGif()
-  await fetchRandomGifs()
-})
-</script>
-
 <template>
   <v-container>
     <v-row justify="center">
@@ -109,6 +58,58 @@ onMounted(async () => {
     </v-row>
   </v-container>
 </template>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { getGifById, getRandomGif } from '@/api/gif'
+import ShareButton from '@/components/ShareButton.vue'
+
+interface Gif {
+  id: string
+  title: string
+  images: {
+    fixed_width: { url: string }
+    original: { url: string }
+  }
+  user?: {
+    username: string
+    display_name?: string
+    avatar_url?: string
+    profile_url?: string
+  }
+}
+
+const route = useRoute()
+const router = useRouter()
+const gif = ref<Gif | null>(null)
+const randomGifs = ref<Gif[]>([])
+
+async function fetchGif() {
+  const id = (route.params as any).id as string
+  gif.value = await getGifById(id)
+}
+
+async function fetchRandomGifs() {
+  const promises = Array.from({ length: 20 }, () => getRandomGif())
+  randomGifs.value = await Promise.all(promises)
+}
+
+function handleAuthorClick() {
+  if (gif.value?.id) {
+    localStorage.setItem('lastGifId', gif.value.id)
+  }
+}
+
+function goToGif(id: string) {
+  router.push(`/gif/${id}`)
+}
+
+onMounted(async () => {
+  await fetchGif()
+  await fetchRandomGifs()
+})
+</script>
 
 <style scoped>
 .gif-wrapper {
