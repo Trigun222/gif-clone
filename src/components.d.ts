@@ -9,9 +9,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     GifCard: typeof import('./components/GifCard.vue')['default']
-    HelloWorld: typeof import('./components/HelloWorld.vue')['default']
     NotFound: typeof import('./components/NotFound.vue')['default']
-    Pagination: typeof import('./components/Pagination.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     ShareButton: typeof import('./components/ShareButton.vue')['default']
