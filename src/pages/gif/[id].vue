@@ -48,8 +48,9 @@
               <v-img
                 :src="item.images.fixed_width.url"
                 :alt="item.title"
+                width="200"
                 height="150"
-                class="rounded"
+                class="rounded uniform-gif"
               />
             </div>
           </v-slide-group-item>
@@ -59,8 +60,8 @@
   </v-container>
 </template>
 
-<script setup lang="ts">
-import { ref, onMounted } from 'vue'
+<<script setup lang="ts">
+import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getGifById, getRandomGif } from '@/api/gif'
 import ShareButton from '@/components/ShareButton.vue'
@@ -80,13 +81,17 @@ interface Gif {
   }
 }
 
+interface RouteParams {
+  id: string
+}
+
 const route = useRoute()
 const router = useRouter()
 const gif = ref<Gif | null>(null)
 const randomGifs = ref<Gif[]>([])
 
 async function fetchGif() {
-  const id = (route.params as any).id as string
+  const id = (route.params as RouteParams).id
   gif.value = await getGifById(id)
 }
 
@@ -109,6 +114,14 @@ onMounted(async () => {
   await fetchGif()
   await fetchRandomGifs()
 })
+
+watch(
+  () => (route.params as RouteParams).id,
+  async () => {
+    await fetchGif()
+    await fetchRandomGifs()
+  }
+)
 </script>
 
 <style scoped>
@@ -119,6 +132,10 @@ onMounted(async () => {
 .random-slider {
   overflow-x: auto;
   padding-bottom: 10px;
+}
+
+.uniform-gif {
+  object-fit: cover;
 }
 
 @media (max-width: 600px) {
