@@ -41,7 +41,7 @@ function copyToClipboard(text: string): Promise<void> {
 const shareGif = async () => {
   const { id, title } = props.gif
   const shareUrl = `${window.location.origin}/gif/${id}`
-  alert(navigator.share)
+
   if (navigator.share) {
     try {
       await navigator.share({
@@ -50,15 +50,14 @@ const shareGif = async () => {
         url: shareUrl
       })
     } catch (err) {
-      alert(err)
       console.warn('Share cancelled or failed', err)
     }
   } else {
     try {
       await copyToClipboard(shareUrl)
-      alert('Ссылка скопирована в буфер обмена!')
+      console.log('Ссылка скопирована в буфер обмена!')
     } catch (err) {
-      alert('Не удалось скопировать ссылку')
+      console.error('Не удалось скопировать ссылку', err)
     }
   }
 }

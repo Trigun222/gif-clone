@@ -75,7 +75,6 @@ import { getTrendingGifs, searchGifs } from '@/api/gif.ts'
 import { debounce } from '@/utils/debounce.ts'
 import GifCard from '@/components/GifCard.vue'
 
-// ————— Лоадер до полной загрузки страницы —————
 const isPageLoaded = ref(false)
 function markAsLoaded() {
   isPageLoaded.value = true
@@ -90,7 +89,6 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('load', markAsLoaded)
 })
-// ——————————————————————————————
 
 const search = ref('')
 const gifs = ref<any[]>([])
