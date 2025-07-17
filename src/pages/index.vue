@@ -1,10 +1,8 @@
 <template>
-  <!-- Оверлей-лоадер поверх всего экрана -->
   <v-overlay absolute :value="!isPageLoaded" z-index="9999">
     <v-progress-circular indeterminate size="64" width="6" />
   </v-overlay>
 
-  <!-- Основной контейнер показываем только после полного load -->
   <v-container
     v-show="isPageLoaded"
     class="main-container"
@@ -50,6 +48,12 @@
           :index="i"
         />
       </transition-group>
+    </div>
+
+    <div v-if="page === 50" class="go-back-button-wrapper">
+      <v-btn color="primary" @click="goToFirstPage">
+        Вернуться
+      </v-btn>
     </div>
 
     <div v-if="loading && !noResults" class="loading">Загрузка...</div>
@@ -128,6 +132,11 @@ const fetchGifs = async () => {
 const resetAndFetch = async () => {
   await fetchGifs()
   window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+const goToFirstPage = async () => {
+  page.value = 1
+  await resetAndFetch()
 }
 
 const fetchFallbackGif = async () => {
@@ -256,5 +265,11 @@ onMounted(() => {
 .not-found-gif img {
   width: 100%;
   border-radius: 12px;
+}
+
+.go-back-button-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
 }
 </style>
