@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { getUserProfileByUsername } from '@/api/gif'
+import {getGifById, getUserProfileByUsername} from '@/api/gif'
 import router from "@/router";
 
 const route = useRoute()
@@ -23,7 +23,7 @@ onMounted(async () => {
   const { gifId: routeGifId } = route.params as any
   gifID.value = routeGifId as string
 
-  const gif = await getUserProfileByUsername(gifID.value)
+  const gif = await getGifById(gifID.value)
   if (gif) {
     displayName.value = gif.user.display_name || gif.user.username
     avatarUrl.value = gif.user.avatar_url
