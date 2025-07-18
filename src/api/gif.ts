@@ -21,8 +21,9 @@ export async function getGifById(id: string) {
   return data.data
 }
 
-export async function getRandomGif() {
-  const res = await fetch(`${API_URL}/random?api_key=${API_KEY}`)
+export async function getRandomGifs(count = 20) {
+  const url = `${API_URL}?api_key=${API_KEY}&limit=${count}`
+  const res = await fetch(url)
   const data = await res.json()
   return data.data
 }

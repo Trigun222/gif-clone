@@ -63,7 +63,7 @@
 <<script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getGifById, getRandomGif } from '@/api/gif'
+import { getGifById, getRandomGifs } from '@/api/gif'
 import ShareButton from '@/components/ShareButton.vue'
 
 interface Gif {
@@ -96,8 +96,7 @@ async function fetchGif() {
 }
 
 async function fetchRandomGifs() {
-  const promises = Array.from({ length: 20 }, () => getRandomGif())
-  randomGifs.value = await Promise.all(promises)
+  randomGifs.value = await getRandomGifs(20)
 }
 
 function handleAuthorClick() {
