@@ -27,12 +27,6 @@ export async function getRandomGif() {
   return data.data
 }
 
-export async function getNotFoundGif() {
-  const res = await fetch(`${API_URL}/random?api_key=${API_KEY}&tag=page+not+found`)
-  const json = await res.json()
-  return json.data
-}
-
 export async function getUserProfileByUsername(username: string) {
   const res = await fetch(`${API_URL}/search?api_key=${API_KEY}&q=${encodeURIComponent(username)}&limit=1`)
   const json = await res.json()
