@@ -16,8 +16,9 @@ const hover = ref(false)
 const router = useRouter()
 
 const goToGif = (id: string) => {
-  router.push(`/gif/${id}`)
+  router.push(`gif/${id}`)
 }
+
 </script>
 
 <template>
