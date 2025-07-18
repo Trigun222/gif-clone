@@ -23,7 +23,7 @@
         <p v-if="gif?.user?.username">
           Автор:
           <router-link
-            :to="`/author/${gif.user.username}`"
+            :to="`/author/${gif.id}`"
             @click="handleAuthorClick"
           >
             {{ gif.user.display_name || gif.user.username }}

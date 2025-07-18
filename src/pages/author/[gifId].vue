@@ -5,7 +5,7 @@ import { getUserProfileByUsername } from '@/api/gif'
 import router from "@/router";
 
 const route = useRoute()
-const username = ref('')
+const gifID = ref('')
 const displayName = ref('')
 const avatarUrl = ref('')
 const profileUrl = ref('')
@@ -20,14 +20,14 @@ const goBackToGif = () => {
 }
 
 onMounted(async () => {
-  const { username: routeUsername } = route.params as any
-  username.value = routeUsername as string
+  const { gifId: routeGifId } = route.params as any
+  gifID.value = routeGifId as string
 
-  const user = await getUserProfileByUsername(username.value)
-  if (user) {
-    displayName.value = user.display_name || user.username
-    avatarUrl.value = user.avatar_url
-    profileUrl.value = user.profile_url
+  const gif = await getUserProfileByUsername(gifID.value)
+  if (gif) {
+    displayName.value = gif.user.display_name || gif.user.username
+    avatarUrl.value = gif.user.avatar_url
+    profileUrl.value = gif.user.profile_url
   }
 })
 </script>
@@ -50,7 +50,7 @@ onMounted(async () => {
 
     <v-row>
       <v-col cols="12" md="6">
-        <h3>{{ username }}</h3>
+        <h3>{{ displayName }}</h3>
         <v-avatar size="100" class="mb-4" v-if="avatarUrl">
           <v-img :src="avatarUrl" />
         </v-avatar>
