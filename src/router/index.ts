@@ -15,7 +15,7 @@ router.onError((err, to) => {
       console.log('Reloading page to fix dynamic import error')
       localStorage.setItem('vuetify:dynamic-reload', 'true')
       // location.assign(to.fullPath)
-      location.assign(import.meta.env.VITE_BASE_URL + '#' + to.fullPath)
+      location.assign( '/#' + to.fullPath)
     }
   } else {
     console.error(err)
