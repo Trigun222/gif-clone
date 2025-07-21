@@ -3,15 +3,8 @@
     <v-progress-circular indeterminate size="64" width="6" />
   </v-overlay>
 
-  <v-container
-    v-show="isPageLoaded"
-    class="main-container"
-    fluid
-  >
-    <v-row
-      class="align-center ma-0 pa-0"
-      style="min-height: 80px; max-height: 100px;"
-    >
+  <v-container v-show="isPageLoaded" class="main-container" fluid>
+    <v-row class="align-center ma-0 pa-0" style="min-height: 80px; max-height: 100px;">
       <v-col cols="auto">
         <router-link to="/" class="gradient-title">
           <h2>Gif</h2>
@@ -36,40 +29,17 @@
     </div>
 
     <div class="gif-masonry pt-5">
-      <transition-group
-        :name="transitionName"
-        tag="div"
-        class="gif-grid"
-      >
+      <div v-for="(colGifs, colIndex) in columns" :key="colIndex" class="masonry-column">
         <GifCard
-          v-for="(gif, i) in gifs"
+          v-for="(gif, i) in colGifs"
           :key="gif.id"
           :gif="gif"
           :index="i"
         />
-      </transition-group>
-    </div>
-
-    <div v-if="page === 50" class="go-back-button-wrapper">
-      <v-btn color="primary" @click="goToFirstPage">
-        Вернуться
-      </v-btn>
+      </div>
     </div>
 
     <div v-if="loading && !noResults" class="loading">Загрузка...</div>
-
-    <v-row
-      justify="center"
-      class="my-8 pagination-wrapper"
-      v-if="!noResults && totalPages > 1"
-    >
-      <v-pagination
-        v-model="page"
-        :length="totalPages"
-        @input="resetAndFetch"
-        :total-visible="isMobile ? 3 : 7"
-      />
-    </v-row>
   </v-container>
 </template>
 
@@ -84,15 +54,10 @@ function markAsLoaded() {
   isPageLoaded.value = true
 }
 onMounted(() => {
-  if (document.readyState === 'complete') {
-    markAsLoaded()
-  } else {
-    window.addEventListener('load', markAsLoaded)
-  }
+  if (document.readyState === 'complete') markAsLoaded()
+  else window.addEventListener('load', markAsLoaded)
 })
-onUnmounted(() => {
-  window.removeEventListener('load', markAsLoaded)
-})
+onUnmounted(() => window.removeEventListener('load', markAsLoaded))
 
 const search = ref('')
 const gifs = ref<any[]>([])
@@ -101,65 +66,75 @@ const page = ref(1)
 const pageSize = 30
 const loading = ref(false)
 const noResults = ref(false)
-const totalPages = ref(1)
-const isMobile = ref(false)
+const hasMore = ref(true)
 
-const transitionName = computed(() =>
-  search.value.trim() ? 'fade-scale' : 'slide-down'
-)
+// Responsive columns
+const width = ref(window.innerWidth)
+function onResize() { width.value = window.innerWidth }
+onMounted(() => window.addEventListener('resize', onResize))
+onUnmounted(() => window.removeEventListener('resize', onResize))
 
-const fetchGifs = async () => {
+const columnCount = computed(() => {
+  if (width.value <= 600) return 1
+  if (width.value <= 900) return 2
+  if (width.value <= 1200) return 3
+  return 4
+})
+
+const columns = computed(() => {
+  const cols: any[][] = Array.from({ length: columnCount.value }, () => [])
+  gifs.value.forEach((gif, idx) => {
+    cols[idx % columnCount.value].push(gif)
+  })
+  return cols
+})
+
+const loadGifs = async (reset = false) => {
   loading.value = true
+  let results: any[] = []
 
-  const results = search.value
-    ? await searchGifs(search.value, pageSize, page.value)
-    : await getTrendingGifs(pageSize, page.value)
+  try {
+    results = search.value
+      ? await searchGifs(search.value, pageSize, page.value)
+      : await getTrendingGifs(pageSize, page.value)
+  } catch (e) {
+    console.error(e)
+  }
 
-  gifs.value = results
-  noResults.value = results.length === 0
+  gifs.value = reset ? results : [...gifs.value, ...results]
+  noResults.value = reset && !results.length
+  hasMore.value = results.length === pageSize
   loading.value = false
 
   if (noResults.value) {
-    await fetchFallbackGif()
+    const fb = await searchGifs('not found', 10, 1)
+    fallbackGif.value = fb[Math.floor(Math.random() * fb.length)]
   }
-
-  totalPages.value =
-    results.length < pageSize && page.value > 1
-      ? page.value
-      : 50
-}
-
-const resetAndFetch = async () => {
-  await fetchGifs()
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
-const goToFirstPage = async () => {
-  page.value = 1
-  await resetAndFetch()
-}
-
-const fetchFallbackGif = async () => {
-  const results = await searchGifs('not found', 10, 1)
-  const randomIndex = Math.floor(Math.random() * results.length)
-  fallbackGif.value = results[randomIndex]
 }
 
 const debouncedSearch = debounce(async () => {
   page.value = 1
-  await resetAndFetch()
+  await loadGifs(true)
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }, 500)
+watch(search, debouncedSearch)
 
-watch(search, () => debouncedSearch())
-watch(page, () => resetAndFetch())
+const fetchMore = async () => {
+  if (loading.value || !hasMore.value) return
+  page.value++
+  await loadGifs(false)
+}
 
+function handleScroll() {
+  if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 200) {
+    fetchMore()
+  }
+}
 onMounted(() => {
-  fetchGifs()
-  isMobile.value = window.innerWidth <= 600
-  window.addEventListener('resize', () => {
-    isMobile.value = window.innerWidth <= 600
-  })
+  loadGifs(true)
+  window.addEventListener('scroll', handleScroll)
 })
+onUnmounted(() => window.removeEventListener('scroll', handleScroll))
 </script>
 
 <style scoped>
@@ -184,60 +159,14 @@ onMounted(() => {
 }
 
 .gif-masonry {
-  column-count: 4;
-  column-gap: 16px;
-}
-@media (max-width: 1200px) {
-  .gif-masonry {
-    column-count: 3;
-  }
-}
-@media (max-width: 900px) {
-  .gif-masonry {
-    column-count: 2;
-  }
-}
-@media (max-width: 600px) {
-  .gif-masonry {
-    column-count: 1;
-  }
-}
-
-.gif-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  display: flex;
   gap: 16px;
-  margin-top: 16px;
 }
-
-.slide-down-enter-active,
-.slide-down-leave-active {
-  transition: all 0.3s ease;
-}
-.slide-down-enter-from,
-.slide-down-leave-to {
-  opacity: 0;
-  transform: translateY(-20px);
-}
-.slide-down-enter-to,
-.slide-down-leave-from {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.fade-scale-enter-active,
-.fade-scale-leave-active {
-  transition: transform 0.4s ease, opacity 0.4s ease;
-}
-.fade-scale-enter-from,
-.fade-scale-leave-to {
-  opacity: 0;
-  transform: scale(0.8);
-}
-.fade-scale-enter-to,
-.fade-scale-leave-from {
-  opacity: 1;
-  transform: scale(1);
+.masonry-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .loading {
@@ -249,27 +178,15 @@ onMounted(() => {
 
 .not-found {
   text-align: center;
-  margin-top: 60px;
+  margin-top: 40px;
 }
 .not-found-text {
-  font-size: 32px;
-  font-weight: bold;
-  color: #ccc;
-  margin-bottom: 20px;
-}
-.not-found-gif {
-  display: inline-block;
-  max-width: 300px;
-  margin: 0 auto;
+  font-size: 20px;
+  color: #888;
+  margin-bottom: 16px;
 }
 .not-found-gif img {
-  width: 100%;
-  border-radius: 12px;
-}
-
-.go-back-button-wrapper {
-  display: flex;
-  justify-content: center;
-  margin-top: 32px;
+  max-width: 300px;
+  border-radius: 8px;
 }
 </style>
