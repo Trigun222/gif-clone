@@ -4,7 +4,6 @@
   </v-overlay>
 
   <v-container v-show="isPageLoaded" class="main-container" fluid>
-    <!-- Header -->
     <v-row class="align-center ma-0 pa-0" style="min-height: 80px; max-height: 100px;">
       <v-col cols="auto">
         <router-link to="/" class="gradient-title">
@@ -21,7 +20,6 @@
       </v-col>
     </v-row>
 
-    <!-- No results -->
     <div v-if="noResults" class="not-found">
       <div class="not-found-text">Not Found</div>
       <div class="not-found-gif">
@@ -61,7 +59,6 @@ import { getTrendingGifs, searchGifs } from '@/api/gif.ts'
 import { debounce } from '@/utils/debounce.ts'
 import GifCard from '@/components/GifCard.vue'
 
-// Page load
 const isPageLoaded = ref(false)
 function markAsLoaded() {
   isPageLoaded.value = true
@@ -72,7 +69,6 @@ onMounted(() => {
 })
 onUnmounted(() => window.removeEventListener('load', markAsLoaded))
 
-// Core state
 const search = ref('')
 const gifs = ref<any[]>([])
 const fallbackGif = ref<any | null>(null)
@@ -82,7 +78,6 @@ const loading = ref(false)
 const noResults = ref(false)
 const hasMore = ref(true)
 
-// Responsive layout
 const width = ref(window.innerWidth)
 function onResize() { width.value = window.innerWidth }
 onMounted(() => window.addEventListener('resize', onResize))
@@ -103,7 +98,6 @@ const columns = computed(() => {
   return cols
 })
 
-// Load gifs
 const loadGifs = async (reset = false) => {
   loading.value = true
   let results: any[] = []
@@ -126,7 +120,6 @@ const loadGifs = async (reset = false) => {
   }
 }
 
-// Debounced search
 const debouncedSearch = debounce(async () => {
   page.value = 1
   await loadGifs(true)
@@ -134,7 +127,6 @@ const debouncedSearch = debounce(async () => {
 }, 500)
 watch(search, debouncedSearch)
 
-// Infinite scroll
 const fetchMore = async () => {
   if (loading.value || !hasMore.value) return
   page.value++
@@ -188,7 +180,6 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
   width: 100%;
 }
 
-/* Анимация перехода между состояниями поиска и главной */
 .fade-gifs-enter-active,
 .fade-gifs-leave-active {
   transition: opacity 0.4s ease;
