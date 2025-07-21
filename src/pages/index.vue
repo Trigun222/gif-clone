@@ -92,9 +92,20 @@ const columnCount = computed(() => {
 
 const columns = computed(() => {
   const cols: any[][] = Array.from({ length: columnCount.value }, () => [])
-  gifs.value.forEach((gif, idx) => {
-    cols[idx % columnCount.value].push(gif)
+  const colHeights = new Array(columnCount.value).fill(0)
+
+  gifs.value.forEach(gif => {
+    const width = parseInt(gif.images.original.width || '1', 10)
+    const height = parseInt(gif.images.original.height || '1', 10)
+    const ratio = height / width
+
+    const estimatedHeight = 200 * ratio // 200 — условная ширина блока
+    const targetCol = colHeights.indexOf(Math.min(...colHeights))
+
+    cols[targetCol].push(gif)
+    colHeights[targetCol] += estimatedHeight
   })
+
   return cols
 })
 
