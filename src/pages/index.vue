@@ -4,13 +4,13 @@
   </v-overlay>
 
   <v-container v-show="isPageLoaded" class="main-container" fluid>
+    <!-- Header -->
     <v-row class="align-center ma-0 pa-0" style="min-height: 80px; max-height: 100px;">
       <v-col cols="auto">
         <router-link to="/" class="gradient-title">
           <h2>Gif</h2>
         </router-link>
       </v-col>
-
       <v-col class="flex-grow-1">
         <v-text-field
           v-model="search"
@@ -21,25 +21,37 @@
       </v-col>
     </v-row>
 
+    <!-- No results -->
     <div v-if="noResults" class="not-found">
       <div class="not-found-text">Not Found</div>
-      <div class="gif-item not-found-gif">
+      <div class="not-found-gif">
         <img :src="fallbackGif?.images.fixed_width.url" alt="Not Found Gif" />
       </div>
     </div>
 
-    <div class="gif-masonry pt-5">
-      <div v-for="(colGifs, colIndex) in columns" :key="colIndex" class="masonry-column">
-        <GifCard
-          v-for="(gif, i) in colGifs"
+    <transition name="fade-gifs" mode="out-in">
+      <div
+        class="gif-masonry pt-5"
+        :key="search"
+      >
+      <div
+        v-for="(colGifs, colIndex) in columns"
+        :key="colIndex"
+        class="masonry-column"
+      >
+        <div
+          v-for="gif in colGifs"
           :key="gif.id"
-          :gif="gif"
-          :index="i"
-        />
+          class="gif-item"
+        >
+          <GifCard :gif="gif" />
+        </div>
       </div>
-    </div>
+      </div>
+    </transition>
 
-    <div v-if="loading && !noResults" class="loading">Загрузка...</div>
+
+    <div v-if="loading && gifs.length" class="loading">Загрузка...</div>
   </v-container>
 </template>
 
@@ -49,6 +61,7 @@ import { getTrendingGifs, searchGifs } from '@/api/gif.ts'
 import { debounce } from '@/utils/debounce.ts'
 import GifCard from '@/components/GifCard.vue'
 
+// Page load
 const isPageLoaded = ref(false)
 function markAsLoaded() {
   isPageLoaded.value = true
@@ -59,6 +72,7 @@ onMounted(() => {
 })
 onUnmounted(() => window.removeEventListener('load', markAsLoaded))
 
+// Core state
 const search = ref('')
 const gifs = ref<any[]>([])
 const fallbackGif = ref<any | null>(null)
@@ -68,7 +82,7 @@ const loading = ref(false)
 const noResults = ref(false)
 const hasMore = ref(true)
 
-// Responsive columns
+// Responsive layout
 const width = ref(window.innerWidth)
 function onResize() { width.value = window.innerWidth }
 onMounted(() => window.addEventListener('resize', onResize))
@@ -89,10 +103,10 @@ const columns = computed(() => {
   return cols
 })
 
+// Load gifs
 const loadGifs = async (reset = false) => {
   loading.value = true
   let results: any[] = []
-
   try {
     results = search.value
       ? await searchGifs(search.value, pageSize, page.value)
@@ -112,6 +126,7 @@ const loadGifs = async (reset = false) => {
   }
 }
 
+// Debounced search
 const debouncedSearch = debounce(async () => {
   page.value = 1
   await loadGifs(true)
@@ -119,12 +134,12 @@ const debouncedSearch = debounce(async () => {
 }, 500)
 watch(search, debouncedSearch)
 
+// Infinite scroll
 const fetchMore = async () => {
   if (loading.value || !hasMore.value) return
   page.value++
   await loadGifs(false)
 }
-
 function handleScroll() {
   if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 200) {
     fetchMore()
@@ -167,6 +182,20 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.gif-item {
+  width: 100%;
+}
+
+/* Анимация перехода между состояниями поиска и главной */
+.fade-gifs-enter-active,
+.fade-gifs-leave-active {
+  transition: opacity 0.4s ease;
+}
+.fade-gifs-enter-from,
+.fade-gifs-leave-to {
+  opacity: 0;
 }
 
 .loading {
